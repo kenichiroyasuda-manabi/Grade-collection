@@ -612,27 +612,28 @@ uploadArea.addEventListener('drop', e => {
 
 // --- 2. 写真の読み込みを非同期(async)にして圧縮を通すように修正 ---
 async function handleFiles(files) {
-  uploadedFiles = [];
+  // uploadedFiles = []; // ここを消すと「追加」ができるようになります
   const previewArea = document.getElementById('previewArea');
   previewArea.innerHTML = '<div style="color:var(--orange); font-size:11px; padding:10px; text-align:center;">画像を最適化中...</div>';
   previewArea.style.display = 'block';
 
-  for (let i = 0; i < files.length; i++) {
+  for (let file of files) {
     try {
-      // 1200pxに圧縮して読み込む
-      const compressedData = await resizeAndConvert(files[i], 1200);
+      // 1200pxに圧縮。ここで1枚ずつ処理が終わるのを待機(await)します
+      const compressedData = await resizeAndConvert(file, 1200);
       
       uploadedFiles.push({ 
         base64: compressedData.split(',')[1], 
         mediaType: "image/jpeg", 
-        name: files[i].name, 
+        name: file.name, 
         previewUrl: compressedData 
       });
+      // 1枚ごとにメモリを休ませるための微小な待ち時間
+      await new Promise(r => setTimeout(r, 100)); 
     } catch (err) {
       console.error("読み込み失敗:", err);
     }
   }
-  // 全て読み終わったら表示を更新
   renderPreviews();
 }
 
@@ -990,7 +991,7 @@ document.addEventListener('change', function(e) {
 
 // ── Submit ──────────────────────────────────────────
 // GASエンドポイントURL（本番時に差し替え）
-const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbylLSa2TB8sqlPKONu6hlp0gWami-dqNEDsBEWea1mehq_9CkfT_zq_1oOPTYZmS3e2pw/exec';
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzUs4YpZ_4PHCuqTQFxd1LbS65q3yxh3RrEmlOySAlUMXy61oqPwWEK04UNrRgT-_9hqg/exec';
 
 async function submitScores() {
   // ── 確認画面から編集後のデータを収集 ──
