@@ -507,6 +507,34 @@
 </div>
 
 <script>
+// --- 【1】ここから圧縮関数（道具）を追加 ---
+function resizeAndConvert(file, maxSize) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                // 長辺をmaxSize(1600px)に収める計算
+                if (width > height && width > maxSize) { height *= maxSize / width; width = maxSize; }
+                else if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                // 圧縮率0.85でJPEG変換
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
 // --- 追加：設定値 ---
 const MY_LIFF_ID = 'あなたのLIFF IDをここに貼り付け'; 
 let userId = 'GUEST';
@@ -586,29 +614,34 @@ uploadArea.addEventListener('drop', e => {
   if (files.length) handleFiles(files);
 });
 
-function handleFiles(files) {
+async function handleFiles(files) {
   uploadedFiles = [];
   const previewArea = document.getElementById('previewArea');
-  previewArea.innerHTML = '';
-  previewArea.style.display = 'none';
+  // 処理中であることをユーザーに伝える
+  previewArea.innerHTML = '<div style="color:var(--orange); font-size:12px; padding:10px; text-align:center;">画像を最適化中...</div>';
+  previewArea.style.display = 'block';
 
   let loaded = 0;
-  files.forEach((file, idx) => {
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      const result = ev.target.result;
-      // DataURLからMIMEタイプを正確に取得
-      const mimeMatch = result.match(/^data:([^;]+);base64,/);
-      const rawMime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-      // Anthropic APIが受け付けるMIMEタイプのみ（heic等はjpegとして扱う）
-      const allowed = ['image/jpeg','image/png','image/gif','image/webp'];
-      const mt = allowed.includes(rawMime) ? rawMime : 'image/jpeg';
-      uploadedFiles[idx] = { base64: result.split(',')[1], mediaType: mt, name: file.name, previewUrl: result };
+  for (let i = 0; i < files.length; i++) {
+    try {
+      // ここでさきほど追加した圧縮処理を呼び出す
+      const compressedBase64 = await resizeAndConvert(files[i], 1600);
+      
+      uploadedFiles[i] = { 
+        base64: compressedBase64.split(',')[1], 
+        mediaType: "image/jpeg", 
+        name: files[i].name, 
+        previewUrl: compressedBase64 
+      };
+      
       loaded++;
+      // すべての処理が終わったらプレビューを表示
       if (loaded === files.length) renderPreviews();
-    };
-    reader.readAsDataURL(file);
-  });
+    } catch (err) {
+      console.error("圧縮失敗:", err);
+      previewArea.innerHTML = '<div style="color:red; font-size:12px;">読み込みに失敗しました</div>';
+    }
+  }
 }
 
 function renderPreviews() {
