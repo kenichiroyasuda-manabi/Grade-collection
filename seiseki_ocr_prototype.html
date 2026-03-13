@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>トウコベ｜成績登録</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -506,6 +507,26 @@
 </div>
 
 <script>
+// --- 追加：設定値 ---
+const MY_LIFF_ID = 'あなたのLIFF IDをここに貼り付け'; 
+let userId = 'GUEST';
+
+// --- 追加：LINEログインの初期化 ---
+async function initLiff() {
+  try {
+    await liff.init({ liffId: MY_LIFF_ID });
+    if (liff.isLoggedIn()) {
+      const profile = await liff.getProfile();
+      userId = profile.userId;
+    } else {
+      liff.login();
+    }
+  } catch (err) {
+    console.error("LIFF初期化エラー", err);
+  }
+}
+window.onload = initLiff;
+  
 let imageBase64 = null;
 let imageMediaType = "image/jpeg";
 let extractedData = null;
@@ -993,9 +1014,7 @@ async function submitScores() {
 
   // ── 送信ペイロード構築 ──
   const payload = {
-    // 生徒識別（本番はLIFF liff.getProfile()で取得）
-   const profile = await liff.getProfile();
-student_id: profile.userId,
+    student_id: userId, // さきほど取得したIDを使います
     submitted_at: new Date().toISOString(),
     mode:         currentMode,
 
