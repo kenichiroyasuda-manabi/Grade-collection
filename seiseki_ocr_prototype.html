@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>トウコベ｜成績登録</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #FF6920;
+    --orange-dark: #E55A15;
+    --orange-light: #FFF2EB;
+    --orange-mid: #FFDFC9;
+    --bg: #F5F8FA;
+    --white: #FFFFFF;
+    --text: #1A1A1A;
+    --text2: #666666;
+    --text3: #AAAAAA;
+    --border: #E8EEF2;
+    --green: #2AC77A;
+    --green-light: #E8FAF2;
+    --red: #F04E37;
+    --red-light: #FEF0EE;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --shadow-lg: 0 4px 24px rgba(255,105,32,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 390px;
+    margin: 0 auto;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--orange);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .logo-text { font-size: 16px; font-weight: 900; color: var(--orange); }
+  .header-sub { font-size: 11px; color: var(--text2); margin-left: auto; }
+
+  /* Content */
+  .content { padding: 16px 14px 40px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* Panel */
+  .panel {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .panel-title {
+    font-size: 15px; font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .panel-sub {
+    font-size: 12px; color: var(--text2);
+    line-height: 1.6; margin-bottom: 16px;
+  }
+
+  /* Upload Area */
+  .upload-area {
+    border: 2px dashed var(--orange-mid);
+    border-radius: var(--radius-sm);
+    background: var(--orange-light);
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .upload-area:hover { border-color: var(--orange); background: #FFF0E8; }
+  .upload-area.dragover { border-color: var(--orange); background: #FFE8D6; transform: scale(1.01); }
+  .upload-area input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-icon { font-size: 40px; margin-bottom: 10px; }
+  .upload-label { font-size: 14px; font-weight: 700; color: var(--orange); margin-bottom: 4px; }
+  .upload-hint { font-size: 11px; color: var(--text2); }
+
+  /* Preview */
+  .preview-wrap {
+    position: relative;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: #000;
+  }
+  .preview-wrap img {
+    width: 100%; display: block;
+    max-height: 260px; object-fit: contain;
+  }
+  .preview-remove {
+    position: absolute; top: 8px; right: 8px;
+    width: 28px; height: 28px;
+    background: rgba(0,0,0,0.6);
+    border: none; border-radius: 50%;
+    color: #fff; font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Analyze Button */
+  .btn-analyze {
+    width: 100%; padding: 15px;
+    background: var(--orange);
+    color: #fff; border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px; font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-analyze:hover { background: var(--orange-dark); transform: translateY(-1px); }
+  .btn-analyze:disabled { background: var(--text3); box-shadow: none; transform: none; cursor: not-allowed; }
+
+  /* Loading */
+  .loading-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 0; gap: 14px;
+  }
+  .spinner {
+    width: 44px; height: 44px;
+    border: 4px solid var(--orange-mid);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--text2); font-weight: 500; }
+  .loading-steps { font-size: 11px; color: var(--text3); text-align: center; line-height: 1.8; }
+
+  /* Result */
+  .result-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 14px;
+  }
+  .result-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+  }
+  .result-badge.success { background: var(--green-light); color: var(--green); }
+  .result-badge.warn    { background: #FFF8E6; color: #F59E0B; }
+
+  .exam-info {
+    background: var(--orange-light);
+    border: 1px solid var(--orange-mid);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .exam-name { font-size: 13px; font-weight: 700; }
+  .exam-date { font-size: 11px; color: var(--text2); }
+
+  /* Score Table */
+  .score-table { display: flex; flex-direction: column; gap: 0; }
+  .score-row {
+    display: flex; align-items: center;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    animation: fadeIn 0.3s ease both;
+  }
+  .score-row:last-child { border-bottom: none; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+
+  .score-subject {
+    width: 80px; font-size: 13px; font-weight: 600; flex-shrink: 0;
+  }
+  .score-input-wrap { flex: 1; position: relative; }
+  .score-input {
+    width: 100%;
+    padding: 8px 36px 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 16px; font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .score-input:focus { border-color: var(--orange); background: var(--white); }
+  .score-input.edited { border-color: var(--orange); background: var(--orange-light); }
+  .score-unit {
+    position: absolute; right: 10px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px; color: var(--text3);
+  }
+  .score-max { font-size: 10px; color: var(--text3); white-space: nowrap; flex-shrink: 0; }
+  .confidence-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .confidence-dot.high   { background: var(--green); }
+  .confidence-dot.medium { background: #F59E0B; }
+  .confidence-dot.low    { background: var(--red); }
+
+  /* Confidence legend */
+  .confidence-legend {
+    display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 10px; color: var(--text2);
+  }
+  .legend-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* Notice */
+  .notice {
+    background: #FFF8E6;
+    border: 1px solid #FDE68A;
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 11px; color: #92400E;
+    line-height: 1.7;
+    display: flex; gap: 6px;
+  }
+
+  /* Submit */
+  .btn-submit {
+    width: 100%; padding: 15px;
+    background: var(--orange);
+    color: #fff; border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px; font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.2s;
+  }
+  .btn-submit:hover { background: var(--orange-dark); }
+  .btn-outline {
+    width: 100%; padding: 13px;
+    background: var(--white);
+    color: var(--orange);
+    border: 1.5px solid var(--orange);
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+  }
+
+  /* Success */
+  .success-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 0; gap: 12px; text-align: center;
+  }
+  .success-icon {
+    width: 64px; height: 64px;
+    background: var(--green-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    animation: popIn 0.4s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .success-title { font-size: 18px; font-weight: 900; color: var(--text); }
+  .success-sub   { font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+  /* Total score */
+  .total-row {
+    background: var(--orange-light);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 6px;
+  }
+  .total-label { font-size: 13px; font-weight: 700; }
+  .total-value { font-size: 22px; font-weight: 900; font-family: 'DM Mono', monospace; color: var(--orange); }
+
+  /* Error */
+  .error-box {
+    background: var(--red-light);
+    border: 1px solid #FCA5A5;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px; color: var(--red);
+    line-height: 1.6;
+  }
+
+  /* Step indicator */
+  .steps {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 4px;
+  }
+  .step {
+    flex: 1; text-align: center;
+    font-size: 10px; font-weight: 600;
+    color: var(--text3);
+    position: relative;
+    padding-bottom: 8px;
+  }
+  .step.active { color: var(--orange); }
+  .step.done   { color: var(--green); }
+  .step::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px; background: var(--border);
+  }
+  .step.active::after { background: var(--orange); }
+  .step.done::after   { background: var(--green); }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px;
+    border-radius: 50%; font-size: 10px; font-weight: 700;
+    background: var(--bg); color: var(--text3); border: 1.5px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .step.active .step-num { background: var(--orange); color: #fff; border-color: var(--orange); }
+  .step.done   .step-num { background: var(--green);  color: #fff; border-color: var(--green); }
+
+  .tag {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; white-space: nowrap;
+  }
+  .tag-dev   { background: #EEF2FF; color: #4F46E5; }
+  .tag-rank  { background: var(--bg); color: var(--text2); border: 1px solid var(--border); }
+  .tag-level { background: var(--orange-light); color: var(--orange); }
+  .tag-avg   { background: var(--green-light); color: var(--green); }
+
+  /* Mode buttons */
+  .mode-btn {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px 10px; border-radius: var(--radius-sm);
+    border: 2px solid var(--border); background: var(--white);
+    cursor: pointer; transition: all 0.18s; gap: 4px;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  .mode-btn:hover { border-color: var(--orange); background: var(--orange-light); }
+  .mode-btn.active { border-color: var(--orange); background: var(--orange-light); box-shadow: 0 0 0 3px rgba(255,105,32,0.15); }
+  .mode-icon { font-size: 28px; margin-bottom: 2px; }
+  .mode-label { font-size: 14px; font-weight: 800; color: var(--text); }
+  .mode-hint { font-size: 10px; color: var(--text2); line-height: 1.5; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-icon">🏠</div>
+  <div>
+    <div class="logo-text">トウコベ</div>
+  </div>
+  <div class="header-sub">成績登録</div>
+</div>
+
+<div class="content">
+
+  <!-- Step indicator -->
+  <div class="steps" id="steps">
+    <div class="step active" id="step1">
+      <div><div class="step-num">1</div></div>
+      写真アップ
+    </div>
+    <div class="step" id="step2">
+      <div><div class="step-num">2</div></div>
+      AI読み取り
+    </div>
+    <div class="step" id="step3">
+      <div><div class="step-num">3</div></div>
+      確認・送信
+    </div>
+  </div>
+
+  <!-- PHASE 1: Upload -->
+  <div class="panel" id="phase-upload">
+
+    <!-- モード選択 -->
+    <div id="modeSelect">
+      <div class="panel-title" style="margin-bottom:6px;">📋 種類を選択してください</div>
+      <div class="panel-sub">成績表の種類に合わせた読み取りを行います。</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
+        <button class="mode-btn" id="modeBtnMoshi" onclick="selectMode('moshi')">
+          <div class="mode-icon">📊</div>
+          <div class="mode-label">模試</div>
+          <div class="mode-hint">全統・進研・駿台など<br>複数ページOK</div>
+        </button>
+        <button class="mode-btn" id="modeBtnTeiki" onclick="selectMode('teiki')">
+          <div class="mode-icon">📝</div>
+          <div class="mode-label">定期テスト</div>
+          <div class="mode-hint">複数科目の答案を<br>まとめて登録</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- アップロードエリア（モード選択後に表示） -->
+    <div id="uploadSection" style="display:none;margin-top:14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span id="modeTag" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;background:var(--orange-light);color:var(--orange);"></span>
+        <button onclick="resetMode()" style="font-size:11px;color:var(--text2);background:none;border:none;cursor:pointer;text-decoration:underline;">変更</button>
+      </div>
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="fileInput" accept="image/*" multiple>
+        <div class="upload-icon">📄</div>
+        <div class="upload-label" id="uploadLabel">タップして写真を選択</div>
+        <div class="upload-hint" id="uploadHint">成績表・志望校判定・マーク結果に対応</div>
+      </div>
+      <div id="previewArea" style="display:none; margin-top:12px;"></div>
+      <div style="margin-top:14px;">
+        <button class="btn-analyze" id="analyzeBtn" disabled onclick="analyzeImage()">
+          <span>🔍</span> AIで成績を読み取る
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PHASE 2: Loading -->
+  <div class="panel" id="phase-loading" style="display:none;">
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">成績表を解析中...</div>
+      <div class="loading-steps" id="loadingSteps">
+        📷 画像を受け取りました<br>
+        🤖 AIが数値を読み取っています<br>
+        📊 科目別に整理しています
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 3: Confirm -->
+  <div class="panel" id="phase-confirm" style="display:none;">
+    <div class="result-header">
+      <div class="panel-title">✅ 読み取り完了</div>
+      <div class="result-badge success" id="confidenceBadge">高精度</div>
+    </div>
+
+    <div class="exam-info">
+      <div>
+        <div class="exam-name" id="examName">—</div>
+        <div class="exam-date" id="examDate">—</div>
+      </div>
+      <div style="font-size:20px;">📋</div>
+    </div>
+
+    <div class="panel-sub" style="margin-bottom:10px;">内容を確認して、間違いがあれば修正してください。</div>
+
+    <div class="confidence-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>高信頼度</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div>要確認</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>読取失敗</div>
+    </div>
+
+    <div class="score-table" id="scoreTable"></div>
+
+    <div class="total-row" id="totalRow">
+      <div class="total-label">合計点</div>
+      <div class="total-value" id="totalScore">—</div>
+    </div>
+
+    <div class="notice" style="margin-top:12px;">
+      <span>⚠️</span>
+      <span>黄色・赤のマークがついた項目は特に確認をお願いします。修正後に「送信」してください。</span>
+    </div>
+  </div>
+
+  <!-- Action Buttons (confirm phase) -->
+  <div id="phase-actions" style="display:none; gap:8px; flex-direction:column;">
+    <button class="btn-submit" onclick="submitScores()">この内容で送信する →</button>
+    <button class="btn-outline" onclick="resetAll()">やり直す</button>
+  </div>
+
+  <!-- PHASE 4: Success -->
+  <div class="panel" id="phase-success" style="display:none;">
+    <div class="success-wrap">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">送信完了！</div>
+      <div class="success-sub">
+        成績データを登録しました。<br>
+        <strong style="color:var(--orange)">3営業日以内</strong>に担当から<br>
+        分析レポートをお送りします。
+      </div>
+    </div>
+    <div id="submittedSummary" style="margin-top:16px;"></div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="errorBox" style="display:none;"></div>
+
+</div>
+
+<script>
+let imageBase64 = null;
+let imageMediaType = "image/jpeg";
+let extractedData = null;
+
+// ── File Input ──────────────────────────────────────
+let currentMode = null; // 'moshi' | 'teiki'
+let uploadedFiles = [];
+
+function selectMode(mode) {
+  currentMode = mode;
+  document.getElementById('modeBtnMoshi').classList.toggle('active', mode === 'moshi');
+  document.getElementById('modeBtnTeiki').classList.toggle('active', mode === 'teiki');
+
+  const tag = document.getElementById('modeTag');
+  if (mode === 'moshi') {
+    tag.textContent = '📊 模試モード';
+    document.getElementById('uploadLabel').textContent = 'タップして写真を選択';
+    document.getElementById('uploadHint').textContent = '第1面・志望校判定など複数ページをまとめてOK';
+  } else {
+    tag.textContent = '📝 定期テストモード';
+    document.getElementById('uploadLabel').textContent = 'タップして複数科目の答案を選択';
+    document.getElementById('uploadHint').textContent = '数学・英語・国語など科目ごとの写真をまとめて選択';
+  }
+
+  document.getElementById('modeSelect').style.display = 'none';
+  document.getElementById('uploadSection').style.display = 'block';
+}
+
+function resetMode() {
+  currentMode = null;
+  uploadedFiles = [];
+  document.getElementById('modeSelect').style.display = 'block';
+  document.getElementById('uploadSection').style.display = 'none';
+  document.getElementById('previewArea').innerHTML = '';
+  document.getElementById('previewArea').style.display = 'none';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('modeBtnMoshi').classList.remove('active');
+  document.getElementById('modeBtnTeiki').classList.remove('active');
+  hideError();
+}
+ // { base64, mediaType, name, previewUrl }
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  handleFiles(files);
+});
+
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/') || f.name.match(/\.heic$/i));
+  if (files.length) handleFiles(files);
+});
+
+function handleFiles(files) {
+  uploadedFiles = [];
+  const previewArea = document.getElementById('previewArea');
+  previewArea.innerHTML = '';
+  previewArea.style.display = 'none';
+
+  let loaded = 0;
+  files.forEach((file, idx) => {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const result = ev.target.result;
+      // DataURLからMIMEタイプを正確に取得
+      const mimeMatch = result.match(/^data:([^;]+);base64,/);
+      const rawMime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      // Anthropic APIが受け付けるMIMEタイプのみ（heic等はjpegとして扱う）
+      const allowed = ['image/jpeg','image/png','image/gif','image/webp'];
+      const mt = allowed.includes(rawMime) ? rawMime : 'image/jpeg';
+      uploadedFiles[idx] = { base64: result.split(',')[1], mediaType: mt, name: file.name, previewUrl: result };
+      loaded++;
+      if (loaded === files.length) renderPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviews() {
+  const previewArea = document.getElementById('previewArea');
+  previewArea.style.display = 'block';
+  previewArea.innerHTML = '';
+
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;';
+
+  uploadedFiles.forEach((f, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:3/4;';
+    wrap.innerHTML = `
+      <img src="${f.previewUrl}" style="width:100%;height:100%;object-fit:cover;">
+      <button onclick="removeFile(${i})" style="position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.name}</div>
+    `;
+    grid.appendChild(wrap);
+  });
+  previewArea.appendChild(grid);
+
+  if (uploadedFiles.length > 1) {
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:11px;color:var(--text2);margin-top:6px;text-align:center;';
+    note.textContent = `${uploadedFiles.length}枚を一括解析します`;
+    previewArea.appendChild(note);
+  }
+
+  document.getElementById('analyzeBtn').disabled = uploadedFiles.length === 0;
+  hideError();
+}
+
+function removeFile(idx) {
+  uploadedFiles.splice(idx, 1);
+  if (uploadedFiles.length === 0) {
+    document.getElementById('previewArea').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = true;
+    document.getElementById('fileInput').value = '';
+  } else {
+    renderPreviews();
+  }
+}
+
+// legacy compat
+function handleFile(file) { handleFiles([file]); }
+
+function removeImage() { uploadedFiles=[]; renderPreviews(); document.getElementById('fileInput').value=''; }
+
+// ── Analyze ─────────────────────────────────────────
+function buildPrompt(count) {
+  const isMoshi = currentMode === 'moshi';
+  const isTeiki = currentMode === 'teiki';
+
+  let modeInstruction = '';
+  if (isMoshi && count > 1) {
+    modeInstruction = `${count}枚の画像は同一模試の複数ページです。
+画像1は成績概況・科目別成績ページ、画像2以降は志望校判定ページや別セクションです。
+全ての画像から情報を統合して1つのJSONにまとめてください。
+特に志望校判定ページから全志望校（1〜4校分）を漏れなくtarget_schoolsに入れてください。`;
+  } else if (isTeiki && count > 1) {
+    modeInstruction = `${count}枚の画像は同一定期テストの複数科目の答案です。
+各画像から科目名と点数を読み取り、全科目をscoresにまとめてください。
+target_schoolsは空配列にしてください。
+exam_nameは「定期テスト」、exam_typeは「定期テスト」としてください。`;
+  }
+
+  const base = `あなたは日本の高校生の成績表を読み取る高精度OCRシステムです。
+${modeInstruction || '画像から成績情報を可能な限り全て抽出してください。'}
+
+以下のJSON形式のみで返答してください。他のテキストは一切含めないでください。
+
+{
+  "exam_name": "模試・テスト名",
+  "exam_date": "実施時期",
+  "exam_type": "模試種別（全統模試/進研模試/定期テストなど）",
+  "scores": [
+    {
+      "subject": "科目名",
+      "score": 数値またはnull,
+      "max_score": 満点またはnull,
+      "deviation": 偏差値またはnull,
+      "rank_in_school": "学内順位またはnull",
+      "rank_national": "全国順位またはnull",
+      "level": "学力レベル（S/A/B/C/D/E）またはnull",
+      "average_score": 平均点またはnull,
+      "confidence": "high/medium/low"
+    }
+  ],
+  "overall": {
+    "total_score": 合計点またはnull,
+    "total_max": 合計配点またはnull,
+    "deviation": 総合偏差値またはnull,
+    "rank_in_school": "学内総合順位またはnull",
+    "rank_national": "全国総合順位またはnull"
+  },
+  "target_schools": [
+    {
+      "rank": 志望順位,
+      "university": "大学名",
+      "faculty": "学部・学科",
+      "exam_type": "前期/後期など",
+      "judgment": "総合判定A〜E",
+      "ctest_judgment": "共通テスト判定またはnull",
+      "secondary_judgment": "二次試験判定またはnull",
+      "rank_in_school": "学内順位またはnull",
+      "confidence": "high/medium/low"
+    }
+  ],
+  "notes": ""
+}
+
+科目名の読み取りに関する重要な注意：
+- 数学の科目名は「数学Ⅰ」「数学Ⅱ」「数学Ⅲ」「数学A」「数学B」「数学Ⅲ型」「数学Ⅱ型」「数学Ⅰ型」などがある
+- 「Ⅲ型」（3本線）と「Ⅱ型」（2本線）を特に注意して区別すること
+- ローマ数字Ⅰ（1）Ⅱ（2）Ⅲ（3）を正確に読み取ること
+- 科目名は省略せず正確に記録すること（例：「現古漢」「数学Ⅲ型」）
+- 読み取れない項目はnullにする
+成績表でない場合は {"error": "成績表が検出できませんでした"} を返す。`;
+  return base;
+}
+
+async function analyzeImage() {
+  if (!uploadedFiles.length) return;
+
+  setStep(2);
+  document.getElementById('phase-upload').style.display = 'none';
+  document.getElementById('phase-loading').style.display = 'block';
+  hideError();
+
+
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{
+          role: 'user',
+          content: [
+            ...uploadedFiles.flatMap((f, i) => {
+              const blocks = [];
+              if (uploadedFiles.length > 1) {
+                blocks.push({ type: 'text', text: `【画像${i+1}/${uploadedFiles.length}】` });
+              }
+              blocks.push({ type: 'image', source: { type: 'base64', media_type: f.mediaType, data: f.base64 } });
+              return blocks;
+            }),
+            { type: 'text', text: buildPrompt(uploadedFiles.length) }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || `APIエラー (${response.status})`);
+    }
+
+    const rawText = data.content[0]?.text || '';
+    let parsed;
+    try {
+      const clean = rawText.replace(/```json|```/g, '').trim();
+      parsed = JSON.parse(clean);
+    } catch (parseErr) {
+      console.error('Parse error:', parseErr, 'Raw:', rawText.substring(0, 200));
+      throw new Error('読み取り結果の解析に失敗しました。もう一度試すか、別の画像をお試しください。');
+    }
+
+    if (parsed.error) {
+      throw new Error(parsed.error);
+    }
+
+    extractedData = parsed;
+    showConfirmPhase(parsed);
+
+  } catch (err) {
+    document.getElementById('phase-loading').style.display = 'none';
+    document.getElementById('phase-upload').style.display = 'block';
+    setStep(1);
+    showError('❌ ' + err.message);
+  }
+}
+
+// ── Show Confirm ────────────────────────────────────
+function showConfirmPhase(data) {
+  document.getElementById('phase-loading').style.display = 'none';
+  document.getElementById('phase-confirm').style.display = 'block';
+  document.getElementById('phase-actions').style.display = 'flex';
+  setStep(3);
+
+  document.getElementById('examName').textContent = data.exam_name || '不明';
+  document.getElementById('examDate').textContent = (data.exam_date || '不明') + (data.exam_type ? ' ／ ' + data.exam_type : '');
+
+  const allItems = [...(data.scores||[]), ...(data.target_schools||[])];
+  const lowCount = allItems.filter(s => s.confidence === 'low').length;
+  const medCount  = allItems.filter(s => s.confidence === 'medium').length;
+  const badge = document.getElementById('confidenceBadge');
+  if (lowCount > 0) { badge.textContent = `要確認 ${lowCount}項目`; badge.className = 'result-badge warn'; }
+  else if (medCount > 0) { badge.textContent = `確認推奨 ${medCount}項目`; badge.className = 'result-badge warn'; }
+  else { badge.textContent = '高精度'; badge.className = 'result-badge success'; }
+
+  const table = document.getElementById('scoreTable');
+  table.innerHTML = '';
+
+  // 総合成績
+  if (data.overall && (data.overall.deviation || data.overall.total_score || data.overall.rank_in_school)) {
+    table.appendChild(makeSectionHeader('📊 総合成績'));
+    const o = data.overall;
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    row.innerHTML = `
+      <div class="confidence-dot high"></div>
+      <div style="flex:1;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+        ${o.total_score != null ? `<span style="font-size:15px;font-weight:900;font-family:'DM Mono',monospace;">${o.total_score}${o.total_max ? '／'+o.total_max : ''}点</span>` : ''}
+        ${o.deviation != null ? `<span class="tag tag-dev">偏差値 ${o.deviation}</span>` : ''}
+        ${o.rank_in_school ? `<span class="tag tag-rank">学内 ${o.rank_in_school}</span>` : ''}
+        ${o.rank_national ? `<span class="tag tag-rank">全国 ${o.rank_national}</span>` : ''}
+      </div>`;
+    table.appendChild(row);
+  }
+
+  // 科目別
+  if ((data.scores||[]).length > 0) {
+    table.appendChild(makeSectionHeader('📝 科目別成績'));
+    (data.scores||[]).forEach((s, i) => {
+      const row = document.createElement('div');
+      row.className = 'score-row';
+      row.style.animationDelay = `${i * 0.05}s`;
+      const dotClass = s.confidence==='high' ? 'high' : s.confidence==='medium' ? 'medium' : 'low';
+      const scoreVal = s.score != null ? s.score : '';
+      const maxDisp  = s.max_score ? `/${s.max_score}` : '';
+      row.innerHTML = `
+        <div class="confidence-dot ${dotClass}"></div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="text" class="subject-input" value="${s.subject}"
+              placeholder="科目名"
+              style="width:90px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;
+                font-size:12px;font-weight:600;font-family:'Noto Sans JP',sans-serif;
+                background:var(--bg);outline:none;color:var(--text);"
+              oninput="this.style.borderColor='var(--orange)';this.style.background='var(--orange-light)';">
+            <div class="score-input-wrap" style="width:76px;">
+              <input type="number" class="score-input" value="${scoreVal}"
+                placeholder="？" min="0" max="${s.max_score||999}"
+                oninput="this.classList.add('edited');updateTotal()">
+              <span class="score-unit">${maxDisp}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            ${s.deviation != null ? `<span class="tag tag-dev">偏差値 ${s.deviation}</span>` : ''}
+            ${s.level ? `<span class="tag tag-level">${s.level}</span>` : ''}
+            ${s.rank_in_school ? `<span class="tag tag-rank">学内 ${s.rank_in_school}</span>` : ''}
+            ${s.average_score != null ? `<span class="tag tag-avg">平均 ${s.average_score}</span>` : ''}
+          </div>
+        </div>`;
+      table.appendChild(row);
+    });
+    updateTotal();
+  }
+
+  // 志望校判定
+  if ((data.target_schools||[]).length > 0) {
+    table.appendChild(makeSectionHeader('🏫 志望校判定'));
+    const colorMap = {A:'#2AC77A',B:'#60B8F0',C:'#F59E0B',D:'#F97316',E:'#F04E37'};
+    (data.target_schools||[]).forEach((t, i) => {
+      const row = document.createElement('div');
+      row.className = 'score-row';
+      row.style.animationDelay = `${i * 0.05}s`;
+      const dotClass = t.confidence==='high' ? 'high' : t.confidence==='medium' ? 'medium' : 'low';
+      const jColor = colorMap[t.judgment?.[0]] || '#888';
+      const jId = `judgment_${i}`;
+      row.innerHTML = `
+        <div class="confidence-dot ${dotClass}"></div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:6px;">
+            第${t.rank}志望　${t.university}　${t.faculty||''}　${t.exam_type||''}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="font-size:9px;color:var(--text3);">総合</div>
+              <select class="judgment-select" data-idx="${i}" data-field="judgment"
+                style="width:42px;height:34px;border-radius:6px;border:1.5px solid var(--border);
+                  font-size:15px;font-weight:900;text-align:center;background:${jColor};color:#fff;
+                  cursor:pointer;outline:none;font-family:'Noto Sans JP',sans-serif;">
+                ${['A','B','C','D','E'].map(v => `<option value="${v}" ${t.judgment===v?'selected':''} style="background:#fff;color:var(--text);">${v}</option>`).join('')}
+                <option value="?" ${!t.judgment?'selected':''} style="background:#fff;color:var(--text);">?</option>
+              </select>
+            </div>
+            ${t.ctest_judgment !== null ? `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="font-size:9px;color:var(--text3);">共テ</div>
+              <select class="judgment-select" data-idx="${i}" data-field="ctest"
+                style="width:42px;height:34px;border-radius:6px;border:1.5px solid var(--border);
+                  font-size:13px;font-weight:700;text-align:center;background:var(--bg);color:var(--text);
+                  cursor:pointer;outline:none;font-family:'Noto Sans JP',sans-serif;">
+                ${['A','B','C','D','E'].map(v => `<option value="${v}" ${t.ctest_judgment===v?'selected':''}>${v}</option>`).join('')}
+                <option value="?" ${!t.ctest_judgment?'selected':''}>?</option>
+              </select>
+            </div>` : ''}
+            ${t.secondary_judgment !== null ? `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="font-size:9px;color:var(--text3);">2次</div>
+              <select class="judgment-select" data-idx="${i}" data-field="secondary"
+                style="width:42px;height:34px;border-radius:6px;border:1.5px solid var(--border);
+                  font-size:13px;font-weight:700;text-align:center;background:var(--bg);color:var(--text);
+                  cursor:pointer;outline:none;font-family:'Noto Sans JP',sans-serif;">
+                ${['A','B','C','D','E'].map(v => `<option value="${v}" ${t.secondary_judgment===v?'selected':''}>${v}</option>`).join('')}
+                <option value="?" ${!t.secondary_judgment?'selected':''}>?</option>
+              </select>
+            </div>` : ''}
+            ${t.rank_in_school ? `<span class="tag tag-rank">学内 ${t.rank_in_school}</span>` : ''}
+          </div>
+        </div>`;
+      table.appendChild(row);
+    });
+  }
+
+  if (table.innerHTML === '') {
+    table.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">データを読み取れませんでした</div>';
+  }
+}
+
+function makeSectionHeader(title) {
+  const el = document.createElement('div');
+  el.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);padding:10px 0 4px;letter-spacing:0.5px;border-bottom:2px solid var(--orange-mid);margin-bottom:2px;';
+  el.textContent = title;
+  return el;
+}
+
+function updateTotal() {
+  const inputs = document.querySelectorAll('.score-input');
+  let total = 0, hasValue = false;
+  inputs.forEach(inp => {
+    const v = parseInt(inp.value);
+    if (!isNaN(v)) { total += v; hasValue = true; }
+  });
+  document.getElementById('totalScore').textContent = hasValue ? total + '点' : '—';
+}
+
+// ── Judgment color update ───────────────────────────
+document.addEventListener('change', function(e) {
+  if (!e.target.classList.contains('judgment-select')) return;
+  if (e.target.dataset.field === 'judgment') {
+    const colorMap = {A:'#2AC77A',B:'#60B8F0',C:'#F59E0B',D:'#F97316',E:'#F04E37'};
+    const c = colorMap[e.target.value] || '#888';
+    e.target.style.background = c;
+    e.target.style.color = e.target.value === '?' ? 'var(--text)' : '#fff';
+  }
+});
+
+// ── Submit ──────────────────────────────────────────
+// GASエンドポイントURL（本番時に差し替え）
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbx4KkkBc4gFQDPJyKa4R9HKgeATRg5BqoVXIBTV-A5sbjgREo9BeNM034s59LKSjdUXwQ](https://script.google.com/macros/s/AKfycbx4KkkBc4gFQDPJyKa4R9HKgeATRg5BqoVXIBTV-A5sbjgREo9BeNM034s59LKSjdUXwQ/exec';
+
+async function submitScores() {
+  // ── 確認画面から編集後のデータを収集 ──
+  const scoreInputs  = document.querySelectorAll('.score-input');
+  const subjectInputs = document.querySelectorAll('.subject-input');
+  const judgmentSelects = document.querySelectorAll('.judgment-select');
+
+  // 科目別成績（編集後）
+  const scores = [];
+  scoreInputs.forEach((inp, i) => {
+    const subjectEl = subjectInputs[i];
+    const originalSubject = extractedData?.scores?.[i]?.subject || '';
+    const editedSubject   = subjectEl?.value || originalSubject;
+    const originalScore   = extractedData?.scores?.[i]?.score;
+    const editedScore     = inp.value !== '' ? parseInt(inp.value) : null;
+    scores.push({
+      subject:        editedSubject,
+      score:          editedScore,
+      max_score:      extractedData?.scores?.[i]?.max_score || null,
+      deviation:      extractedData?.scores?.[i]?.deviation || null,
+      level:          extractedData?.scores?.[i]?.level || null,
+      average_score:  extractedData?.scores?.[i]?.average_score || null,
+      rank_in_school: extractedData?.scores?.[i]?.rank_in_school || null,
+      user_corrected_subject: editedSubject !== originalSubject,
+      user_corrected_score:   editedScore   !== originalScore,
+    });
+  });
+
+  // 志望校判定（編集後）
+  const targetSchools = (extractedData?.target_schools || []).map((t, i) => {
+    const judg = document.querySelector(`.judgment-select[data-idx="${i}"][data-field="judgment"]`)?.value || t.judgment;
+    const ctest = document.querySelector(`.judgment-select[data-idx="${i}"][data-field="ctest"]`)?.value || t.ctest_judgment;
+    const sec   = document.querySelector(`.judgment-select[data-idx="${i}"][data-field="secondary"]`)?.value || t.secondary_judgment;
+    return {
+      rank:               t.rank,
+      university:         t.university,
+      faculty:            t.faculty,
+      exam_type:          t.exam_type,
+      judgment:           judg,
+      ctest_judgment:     ctest,
+      secondary_judgment: sec,
+      rank_in_school:     t.rank_in_school,
+      user_corrected:     judg !== t.judgment || ctest !== t.ctest_judgment || sec !== t.secondary_judgment,
+    };
+  });
+
+  // ── 送信ペイロード構築 ──
+  const payload = {
+    // 生徒識別（本番はLIFF liff.getProfile()で取得）
+   const profile = await liff.getProfile();
+student_id: profile.userId,
+    submitted_at: new Date().toISOString(),
+    mode:         currentMode,
+
+    // 試験情報
+    exam: {
+      name: extractedData?.exam_name || '不明',
+      date: extractedData?.exam_date || '不明',
+      type: extractedData?.exam_type || '不明',
+    },
+
+    // 総合成績
+    overall: extractedData?.overall || {},
+
+    // 科目別成績（編集後）
+    scores,
+
+    // 志望校判定（編集後）
+    target_schools: targetSchools,
+
+    // 写真データ（原本として保存）
+    images: uploadedFiles.map(f => ({
+      filename:  f.name,
+      mediaType: f.mediaType,
+      base64:    f.base64,   // GAS側でDriveに保存
+    })),
+  };
+
+  // ── GASに送信 ──
+  document.getElementById('phase-confirm').style.display = 'none';
+  document.getElementById('phase-actions').style.display = 'none';
+  document.getElementById('phase-success').style.display = 'block';
+
+  const summaryEl = document.getElementById('submittedSummary');
+  summaryEl.innerHTML = renderSubmitSummary(scores, targetSchools, payload);
+
+  // GASエンドポイントが設定済みの場合のみ送信
+  if (!GAS_ENDPOINT.includes('YOUR_SCRIPT_ID')) {
+    try {
+      const res = await fetch(GAS_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json();
+      if (result.status === 'ok') {
+        document.getElementById('gasStatus').innerHTML =
+          `<div style="color:var(--green);font-size:12px;font-weight:700;margin-top:8px;">✅ スプレッドシートに保存しました</div>`;
+      }
+    } catch (e) {
+      document.getElementById('gasStatus').innerHTML =
+        `<div style="color:var(--red);font-size:12px;margin-top:8px;">⚠️ 送信エラー：${e.message}</div>`;
+    }
+  } else {
+    // デモ表示
+    document.getElementById('gasStatus').innerHTML = `
+      <div style="background:#F0FFF8;border:1px solid #A7F3D0;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:11px;color:#065F46;line-height:1.8;">
+        <div style="font-weight:700;margin-bottom:4px;">📡 本番送信イメージ（GAS未設定）</div>
+        写真 ${uploadedFiles.length}枚 → Google Drive保存<br>
+        構造化データ → スプレッドシート3シートに記録<br>
+        LINEで顧客・CSへ自動通知
+      </div>`;
+  }
+}
+
+function renderSubmitSummary(scores, targetSchools, payload) {
+  const validScores = scores.filter(r => r.score !== null);
+  const total = validScores.reduce((a, b) => a + b.score, 0);
+  const corrected = scores.filter(r => r.user_corrected_subject || r.user_corrected_score).length;
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:8px;">
+
+      <!-- 試験情報 -->
+      <div style="background:var(--orange-light);border-radius:var(--radius-sm);padding:10px 14px;">
+        <div style="font-size:11px;color:var(--text2);font-weight:700;margin-bottom:2px;">試験</div>
+        <div style="font-size:13px;font-weight:700;">${payload.exam.name}</div>
+        <div style="font-size:11px;color:var(--text2);">${payload.exam.date}</div>
+      </div>
+
+      <!-- 科目別 -->
+      ${validScores.length > 0 ? `
+      <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px 14px;">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:700;">科目別成績</div>
+        ${validScores.map(r => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+            <span style="display:flex;align-items:center;gap:4px;">
+              ${r.user_corrected_subject || r.user_corrected_score ? '<span style="color:var(--orange);font-size:9px;font-weight:700;">修正</span>' : ''}
+              ${r.subject}
+            </span>
+            <span style="font-family:'DM Mono',monospace;font-weight:700;">${r.score}点</span>
+          </div>
+        `).join('')}
+        <div style="display:flex;justify-content:space-between;padding:8px 0 0;font-size:13px;font-weight:700;">
+          <span>合計</span>
+          <span style="font-family:'DM Mono',monospace;color:var(--orange);">${total}点</span>
+        </div>
+      </div>` : ''}
+
+      <!-- 志望校 -->
+      ${targetSchools.length > 0 ? `
+      <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px 14px;">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:700;">志望校判定</div>
+        ${targetSchools.map(t => {
+          const c = {A:'#2AC77A',B:'#60B8F0',C:'#F59E0B',D:'#F97316',E:'#F04E37'}[t.judgment] || '#888';
+          return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:5px;background:${c};color:#fff;font-size:12px;font-weight:900;flex-shrink:0;">${t.judgment||'?'}</span>
+            <span>第${t.rank}志望　${t.university}　${t.faculty||''}</span>
+          </div>`;
+        }).join('')}
+      </div>` : ''}
+
+      <!-- 写真枚数 -->
+      <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--bg);border-radius:var(--radius-sm);font-size:11px;color:var(--text2);">
+        📷 写真 ${uploadedFiles.length}枚を原本として保存
+        ${corrected > 0 ? `　✏️ ${corrected}項目を修正` : ''}
+      </div>
+
+      <div id="gasStatus"></div>
+    </div>
+  `;
+}
+
+// ── Helpers ─────────────────────────────────────────
+function resetAll() {
+  imageBase64 = null;
+  extractedData = null;
+  document.getElementById('phase-upload').style.display = 'block';
+  document.getElementById('phase-loading').style.display = 'none';
+  document.getElementById('phase-confirm').style.display = 'none';
+  document.getElementById('phase-actions').style.display = 'none';
+  document.getElementById('phase-success').style.display = 'none';
+  uploadedFiles=[];
+  currentMode=null;
+  document.getElementById('modeSelect').style.display = 'block';
+  document.getElementById('uploadSection').style.display = 'none';
+  document.getElementById('modeBtnMoshi').classList.remove('active');
+  document.getElementById('modeBtnTeiki').classList.remove('active');
+  document.getElementById('previewArea').innerHTML='';
+  document.getElementById('previewArea').style.display = 'none';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('scoreTable').innerHTML = '';
+  hideError();
+  setStep(1);
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBox');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('errorBox').style.display = 'none';
+}
+
+function setStep(n) {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById(`step${i}`);
+    el.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
+  });
+}
+</script>
+</body>
+</html>
