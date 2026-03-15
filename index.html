@@ -363,7 +363,7 @@
 </head>
 <body>
 
-<div id=“debugBox” style=“display:none; background:#333; color:#0f0; padding:10px; font-size:10px; position:fixed; bottom:0; left:0; right:0; z-index:9999; font-family:monospace; opacity:0.9;“></div>
+<div id="debugBox" style="display:none; background:#333; color:#0f0; padding:10px; font-size:10px; position:fixed; bottom:0; left:0; right:0; z-index:9999; font-family:monospace; opacity:0.9;"></div>
   
 <div class="header">
   <div class="logo-icon">🏠</div>
@@ -613,9 +613,17 @@ uploadArea.addEventListener('drop', e => {
 });
 
 // --- 2. 写真の読み込みを非同期(async)にして圧縮を通すように修正 ---
+// --- 408行目付近 handleFiles関数の完全修正版 ---
 async function handleFiles(files) {
     const debug = document.getElementById('debugBox');
-    const log = (msg) => { debug.style.display = 'block'; debug.innerText = "診断: " + msg; };
+    // 診断用ログを表示する関数（引用符のエラーを防ぐため直接修正）
+    const log = (msg) => { 
+        if(debug) {
+            debug.style.display = 'block'; 
+            debug.innerText = "診断: " + msg; 
+        }
+        console.log(msg);
+    };
     
     log("処理開始...");
     uploadedFiles = [];
@@ -628,7 +636,6 @@ async function handleFiles(files) {
         log(`${i+1}枚目: ${file.name} (${(file.size/1024/1024).toFixed(1)}MB) を読込中...`);
 
         try {
-            // ステップ1: 圧縮処理へ送る
             log(`${i+1}枚目: 圧縮エンジンを起動...`);
             const compressedData = await resizeAndConvert(file, 1200);
             
@@ -639,18 +646,23 @@ async function handleFiles(files) {
                 name: file.name, 
                 previewUrl: compressedData 
             });
+
+            // 1枚ごとにメモリを休ませるための微小な待ち時間
+            await new Promise(r => setTimeout(r, 100)); 
+
         } catch (err) {
             log(`❌エラー発生: ${err.message || err}`);
-            console.error(err);
-            // ここで止まってしまうのが今の「Load failed」です
+            console.error("読み込み失敗:", err);
             return; 
         }
     }
     
     log("すべての画像の最適化が完了しました！");
-    setTimeout(() => { debug.style.display = 'none'; }, 3000); // 3秒後に消す
+    setTimeout(() => { if(debug) debug.style.display = 'none'; }, 3000);
     renderPreviews();
-}      // 1枚ごとにメモリを休ませるための微小な待ち時間
+}
+  
+  // 1枚ごとにメモリを休ませるための微小な待ち時間
       await new Promise(r => setTimeout(r, 100)); 
     } catch (err) {
       console.error("読み込み失敗:", err);
