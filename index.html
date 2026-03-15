@@ -616,12 +616,8 @@ uploadArea.addEventListener('drop', e => {
 // --- 408行目付近 handleFiles関数の完全修正版 ---
 async function handleFiles(files) {
     const debug = document.getElementById('debugBox');
-    // 診断用ログを表示する関数（引用符のエラーを防ぐため直接修正）
     const log = (msg) => { 
-        if(debug) {
-            debug.style.display = 'block'; 
-            debug.innerText = "診断: " + msg; 
-        }
+        if(debug) { debug.style.display = 'block'; debug.innerText = "診断: " + msg; }
         console.log(msg);
     };
     
@@ -633,43 +629,27 @@ async function handleFiles(files) {
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        log(`${i+1}枚目: ${file.name} (${(file.size/1024/1024).toFixed(1)}MB) を読込中...`);
-
+        log(`${i+1}枚目: ${file.name} を読込中...`);
         try {
-            log(`${i+1}枚目: 圧縮エンジンを起動...`);
+            log(`${i+1}枚目: 圧縮中...`);
             const compressedData = await resizeAndConvert(file, 1200);
             
-            log(`${i+1}枚目: 圧縮成功。プレビュー作成中...`);
             uploadedFiles.push({ 
                 base64: compressedData.split(',')[1], 
                 mediaType: "image/jpeg", 
                 name: file.name, 
                 previewUrl: compressedData 
             });
-
-            // 1枚ごとにメモリを休ませるための微小な待ち時間
-            await new Promise(r => setTimeout(r, 100)); 
-
+            await new Promise(r => setTimeout(r, 100)); // メモリを休ませる
         } catch (err) {
-            log(`❌エラー発生: ${err.message || err}`);
-            console.error("読み込み失敗:", err);
+            log(`❌エラー: ${err.message || err}`);
             return; 
         }
     }
     
-    log("すべての画像の最適化が完了しました！");
+    log("すべての最適化が完了しました！");
     setTimeout(() => { if(debug) debug.style.display = 'none'; }, 3000);
     renderPreviews();
-}
-  
-  // 1枚ごとにメモリを休ませるための微小な待ち時間
-      await new Promise(r => setTimeout(r, 100)); 
-    } catch (err) {
-      console.error("読み込み失敗:", err);
-    }
-  }
-  renderPreviews();
-}
 
 function renderPreviews() {
   const previewArea = document.getElementById('previewArea');
